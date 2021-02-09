@@ -1,0 +1,17 @@
+# vim:ft=automake
+# All paths should be given relative to the root
+
+if BUILD_EXAMPLES
+noinst_HEADERS += examples/nvram/store.h
+
+bin_PROGRAMS += examples/nvram/store
+examples_nvram_store_SOURCES      = examples/nvram/store.c \
+                                      examples/tpm_test_keys.c \
+                                      examples/tpm_io.c
+examples_nvram_store_LDADD        = src/libwolftpm.la $(LIB_STATIC_ADD)
+examples_nvram_store_DEPENDENCIES = src/libwolftpm.la
+
+endif
+
+dist_example_DATA+= examples/nvram/store.c
+DISTCLEANFILES+= examples/nvram/.libs/store
