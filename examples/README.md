@@ -236,6 +236,28 @@ TPM2.0 Key load example
 Loading SRK: Storage 0x81000200 (282 bytes)
 Reading 744 bytes from keyblob.bin
 Loaded key to 0x80000001
+
+
+$ ./examples/keygen/keygen -sym
+TPM2.0 Key generation example
+    Key Blob: keyblob.bin
+    Algorithm: SYMCIPHER
+        AES, 256bits, CTR mode
+    Template: Default
+    Use Parameter Encryption: NULL
+Loading SRK: Storage 0x81000200 (282 bytes)
+AES Symmetric template with 256 bits, Counter mode
+Creating new SYMCIPHER key...
+Created new key (pub 50, priv 158 bytes)
+Wrote 776 bytes to keyblob.bin
+
+$ ./examples/keygen/keyload keyblob.bin
+TPM2.0 Key load example
+    Key Blob: keyblob.bin
+    Use Parameter Encryption: NULL
+Loading SRK: Storage 0x81000200 (282 bytes)
+Reading 776 bytes from keyblob.bin
+Loaded key to 0x80000001
 ```
 
 Example for importing a private key as TPM key blob and storing to disk, then loading from disk and loading into temporary TPM handle.
