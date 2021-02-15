@@ -53,7 +53,7 @@ static void usage(void)
     printf("* -aes/xor: Use Parameter Encryption\n");
 }
 
-int TPM2_NVRAM_Store_Example(void* userCtx, int argc, char *argv[])
+int TPM2_NVRAM_Read_Example(void* userCtx, int argc, char *argv[])
 {
     int rc;
     WOLFTPM2_DEV dev;
@@ -118,6 +118,7 @@ int TPM2_NVRAM_Store_Example(void* userCtx, int argc, char *argv[])
     }
 
     /* Prepare auth for NV Index */
+    XMEMSET(&nv, 0, sizeof(nv));
     auth.size = sizeof(gNvAuth)-1;
     XMEMCPY(auth.buffer, gNvAuth, auth.size);
     rc = wolfTPM2_SetAuthPassword(&dev, 0, &auth);
@@ -141,7 +142,7 @@ int TPM2_NVRAM_Store_Example(void* userCtx, int argc, char *argv[])
     rc = wolfTPM2_NVDeleteAuth(&dev, &parent, TPM2_DEMO_NVRAM_STORE_PRIV_INDEX);
     if (rc != 0) goto exit;
 
-    printf("Extraction of key from NV RAm at index 0x%x\n" ,
+    printf("Extraction of key from NVRAM at index 0x%x succeeded\n" ,
         TPM2_DEMO_NVRAM_STORE_PRIV_INDEX);
 
 exit:
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
     int rc = NOT_COMPILED_IN;
 
 #ifndef WOLFTPM2_NO_WRAPPER
-    rc = TPM2_NVRAM_Store_Example(NULL, argc, argv);
+    rc = TPM2_NVRAM_Read_Example(NULL, argc, argv);
 #else
     printf("NVRAM code not compiled in\n");
     (void)argc;
