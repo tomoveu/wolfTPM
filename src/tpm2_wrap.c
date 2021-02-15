@@ -2561,6 +2561,7 @@ int wolfTPM2_NVCreateAuth(WOLFTPM2_DEV* dev, WOLFTPM2_HANDLE* parent,
     }
 
     /* return new NV handle */
+    XMEMSET(nv, 0, sizeof(*nv));
     nv->handle.hndl = (TPM_HANDLE)nvIndex;
     nv->handle.auth = in.auth;
 
