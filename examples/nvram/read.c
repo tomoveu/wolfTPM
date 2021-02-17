@@ -117,11 +117,11 @@ int TPM2_NVRAM_Read_Example(void* userCtx, int argc, char *argv[])
         if (rc != 0) goto exit;
     }
 
-    /* Prepare auth for NV Index */
-    XMEMSET(&nv, 0, sizeof(nv));
     auth.size = sizeof(gNvAuth)-1;
     XMEMCPY(auth.buffer, gNvAuth, auth.size);
-    rc = wolfTPM2_SetAuthPassword(&dev, 0, &auth);
+
+    /* Prepare auth for NV Index */
+    XMEMSET(&nv, 0, sizeof(nv));
     nv.handle.hndl = TPM2_DEMO_NVRAM_STORE_PRIV_INDEX;
     nv.handle.auth.size = auth.size;
     XMEMCPY(nv.handle.auth.buffer, auth.buffer, auth.size);
