@@ -446,6 +446,15 @@ int wolfTPM2_SetAuthSession(WOLFTPM2_DEV* dev, int index,
         session->nonceTPM.size = tpmSession->nonceTPM.size;
         XMEMCPY(session->nonceTPM.buffer, tpmSession->nonceTPM.buffer,
             session->nonceTPM.size);
+
+        /* Parameter Encryption session will have an hmac added later.
+         * Reserve space, the same way it was done for nonceCaller above.
+         */
+        if (session->sessionHandle != TPM_RS_PW &&
+            ((session->sessionAttributes & TPMA_SESSION_encrypt) ||
+             (session->sessionAttributes & TPMA_SESSION_decrypt))) {
+            session->auth.size = TPM2_GetHashDigestSize(session->authHash);
+        }
     }
     return rc;
 }
