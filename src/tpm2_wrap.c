@@ -2625,6 +2625,8 @@ int wolfTPM2_NVWriteAuth(WOLFTPM2_DEV* dev, WOLFTPM2_NV* nv,
     /* set session auth for key */
     if (dev->ctx.session) {
         wolfTPM2_SetAuthHandle(dev, 0, &nv->handle);
+        /* Necessary, because NVWrite has two handles, second is NV Index */
+        wolfTPM2_SetAuthHandle(dev, 1, &nv->handle);
     }
 
     while (dataSz > 0) {

@@ -5287,22 +5287,27 @@ int TPM2_GetName(TPM2_CTX* ctx, UINT32 handleValue, int handleCnt, int idx, TPM2
         return TPM_RC_SUCCESS;
 
     session = &ctx->session[idx];
-    name->size = session->name.size;
-    XMEMCPY(name->name, session->name.name, name->size);
 
-    (void)handleValue;
-/* DEBUG:
-    if (handleValue >= TRANSIENT_FIRST && handleValue <= TRANSIENT_LAST) {
+#if 0
+    if (session->name.size > 0) {
+        name->size = session->name.size;
         XMEMCPY(name->name, session->name.name, name->size);
     }
-    else if (handleValue >= NV_INDEX_FIRST && handleValue <= NV_INDEX_LAST) {
+    (void)handleValue;
+#else
+    if ((handleValue >= TRANSIENT_FIRST) ||
+        (handleValue >= NV_INDEX_FIRST && handleValue <= NV_INDEX_LAST)) {
+        if (session->name.size > 0) {
+            name->size = session->name.size;
+            XMEMCPY(name->name, session->name.name, name->size);
+        }
     }
     else {
         handleValue = TPM2_Packet_SwapU32(handleValue);
         name->size = sizeof(handleValue);
         XMEMCPY(name->name, (byte*)&handleValue, name->size);
     }
-*/
+#endif
 
 #ifdef WOLFTPM_DEBUG_VERBOSE
     printf("Name %d: %d\n", idx, name->size);
