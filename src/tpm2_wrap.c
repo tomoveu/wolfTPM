@@ -26,6 +26,11 @@
 
 /* For some struct to buffer conversions */
 #include <wolftpm/tpm2_packet.h>
+#ifndef WOLFTPM2_NO_WOLFCRYPT
+/* Required in wolfTPM2_CreateAuth() for name computation of NV handles */
+#include <wolfssl/wolfcrypt/hash.h>
+#endif
+
 
 /* Local Functions */
 static int wolfTPM2_GetCapabilities_NoDev(WOLFTPM2_CAPS* cap);
@@ -2533,6 +2538,7 @@ int wolfTPM2_NVCreateAuth(WOLFTPM2_DEV* dev, WOLFTPM2_HANDLE* parent,
 {
     int rc;
     NV_DefineSpace_In in;
+    TPM2B_NAME name;
 
     if (dev == NULL || nv == NULL)
         return BAD_FUNC_ARG;
@@ -2542,6 +2548,7 @@ int wolfTPM2_NVCreateAuth(WOLFTPM2_DEV* dev, WOLFTPM2_HANDLE* parent,
         wolfTPM2_SetAuthHandle(dev, 0, parent);
     }
 
+    XMEMSET(&name, 0, sizeof(name));
     XMEMSET(&in, 0, sizeof(in));
     in.authHandle = parent->hndl;
     if (auth && authSz > 0) {
@@ -2569,10 +2576,15 @@ int wolfTPM2_NVCreateAuth(WOLFTPM2_DEV* dev, WOLFTPM2_HANDLE* parent,
         return rc;
     }
 
+    /* Compute NV Index name in case of parameter encryption */
+    rc = TPM2_HashNvPublic(&in.publicInfo, name.name, &name.size);
+
     /* return new NV handle */
     XMEMSET(nv, 0, sizeof(*nv));
     nv->handle.hndl = (TPM_HANDLE)nvIndex;
     nv->handle.auth = in.auth;
+    nv->handle.name.size = name.size;
+    XMEMCPY(&nv->handle.name.name, name.name, nv->handle.name.size);
 
 #ifdef DEBUG_WOLFTPM
     printf("TPM2_NV_DefineSpace: Auth 0x%x, Idx 0x%x, Attribs 0x%d, Size %d\n",
