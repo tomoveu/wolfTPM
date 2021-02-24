@@ -5287,20 +5287,22 @@ int TPM2_GetName(TPM2_CTX* ctx, UINT32 handleValue, int handleCnt, int idx, TPM2
         return TPM_RC_SUCCESS;
 
     session = &ctx->session[idx];
+    name->size = session->name.size;
+    XMEMCPY(name->name, session->name.name, name->size);
 
+    (void)handleValue;
+/* DEBUG:
     if (handleValue >= TRANSIENT_FIRST && handleValue <= TRANSIENT_LAST) {
-        name->size = session->name.size;
         XMEMCPY(name->name, session->name.name, name->size);
     }
     else if (handleValue >= NV_INDEX_FIRST && handleValue <= NV_INDEX_LAST) {
-        name->size = session->name.size;
-        XMEMCPY(name->name, session->name.name, name->size);
     }
     else {
         handleValue = TPM2_Packet_SwapU32(handleValue);
         name->size = sizeof(handleValue);
         XMEMCPY(name->name, (byte*)&handleValue, name->size);
     }
+*/
 
 #ifdef WOLFTPM_DEBUG_VERBOSE
     printf("Name %d: %d\n", idx, name->size);
@@ -5669,14 +5671,14 @@ UINT16 TPM2_GetVendorID(void)
 }
 
 /* Stores nameAlg + the digest of nvPublic in buffer, total size in size */
-int TPM2_HashNvPublic(TPM2B_NV_PUBLIC* publicInfo, byte* buffer, UINT16* size)
+int TPM2_HashNvPublic(TPMS_NV_PUBLIC* nvPublic, byte* buffer, UINT16* size)
 {
     int rc;
 #ifndef WOLFTPM2_NO_WOLFCRYPT
     int hashSize, nameAlgValue, nameAlgSize;
     wc_HashAlg hash;
     enum wc_HashType hashType;
-    byte appending[sizeof(TPM2B_NV_PUBLIC)];
+    byte appending[sizeof(TPMS_NV_PUBLIC)];
     TPM2B_DIGEST digest;
     TPM2_Packet packet;
 
@@ -5686,18 +5688,16 @@ int TPM2_HashNvPublic(TPM2B_NV_PUBLIC* publicInfo, byte* buffer, UINT16* size)
     packet.size = sizeof(appending);
 
     /* nvPublic must be in Marshaled state for hashing */
-    publicInfo->size = 4 + 2 + 4 + 2 + publicInfo->nvPublic.authPolicy.size + 2;
-    TPM2_Packet_AppendU16(&packet, publicInfo->size);
-    TPM2_Packet_AppendU32(&packet, publicInfo->nvPublic.nvIndex);
-    TPM2_Packet_AppendU16(&packet, publicInfo->nvPublic.nameAlg);
-    TPM2_Packet_AppendU32(&packet, publicInfo->nvPublic.attributes);
-    TPM2_Packet_AppendU16(&packet, publicInfo->nvPublic.authPolicy.size);
-    TPM2_Packet_AppendBytes(&packet, publicInfo->nvPublic.authPolicy.buffer,
-        publicInfo->nvPublic.authPolicy.size);
-    TPM2_Packet_AppendU16(&packet, publicInfo->nvPublic.dataSize);
+    TPM2_Packet_AppendU32(&packet, nvPublic->nvIndex);
+    TPM2_Packet_AppendU16(&packet, nvPublic->nameAlg);
+    TPM2_Packet_AppendU32(&packet, nvPublic->attributes);
+    TPM2_Packet_AppendU16(&packet, nvPublic->authPolicy.size);
+    TPM2_Packet_AppendBytes(&packet, nvPublic->authPolicy.buffer,
+        nvPublic->authPolicy.size);
+    TPM2_Packet_AppendU16(&packet, nvPublic->dataSize);
 
     /* Hashing nvPublic */
-    rc = TPM2_GetHashType(publicInfo->nvPublic.nameAlg);
+    rc = TPM2_GetHashType(nvPublic->nameAlg);
     hashType = (enum wc_HashType)rc;
     rc = wc_HashGetDigestSize(hashType);
     if (rc < 0) {
@@ -5715,8 +5715,8 @@ int TPM2_HashNvPublic(TPM2B_NV_PUBLIC* publicInfo, byte* buffer, UINT16* size)
     }
 
     if (rc == 0) {
-        nameAlgValue = TPM2_Packet_SwapU16(publicInfo->nvPublic.nameAlg);
-        nameAlgSize = sizeof(publicInfo->nvPublic.nameAlg);
+        nameAlgValue = TPM2_Packet_SwapU16(nvPublic->nameAlg);
+        nameAlgSize = sizeof(nvPublic->nameAlg);
         XMEMCPY(buffer, (byte*)&nameAlgValue, nameAlgSize);
         XMEMCPY(&buffer[2], digest.buffer, hashSize);
         /* account for nameAlg concatenation */

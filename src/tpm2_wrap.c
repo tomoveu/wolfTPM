@@ -2577,7 +2577,7 @@ int wolfTPM2_NVCreateAuth(WOLFTPM2_DEV* dev, WOLFTPM2_HANDLE* parent,
     }
 
     /* Compute NV Index name in case of parameter encryption */
-    rc = TPM2_HashNvPublic(&in.publicInfo, name.name, &name.size);
+    rc = TPM2_HashNvPublic(&in.publicInfo.nvPublic, name.name, &name.size);
 
     /* return new NV handle */
     XMEMSET(nv, 0, sizeof(*nv));
