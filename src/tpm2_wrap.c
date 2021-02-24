@@ -420,6 +420,24 @@ int wolfTPM2_SetAuthHandle(WOLFTPM2_DEV* dev, int index,
     return wolfTPM2_SetAuth(dev, index, TPM_RS_PW, auth, 0, name);
 }
 
+int wolfTPM2_SetNameHandle(WOLFTPM2_DEV* dev, int index,
+    const WOLFTPM2_HANDLE* handle)
+{
+    const TPM2B_NAME* name = NULL;
+    TPM2_AUTH_SESSION* session;
+
+    if (dev == NULL || handle == NULL || index >= MAX_SESSION_NUM) {
+        return BAD_FUNC_ARG;
+    }
+
+    name = &handle->name;
+    session = &dev->session[index];
+
+    session->name.size = name->size;
+    XMEMCPY(session->name.name, name->name, session->name.size);
+    return TPM_RC_SUCCESS;
+}
+
 int wolfTPM2_SetAuthSession(WOLFTPM2_DEV* dev, int index,
     const WOLFTPM2_SESSION* tpmSession, TPMA_SESSION sessionAttributes)
 {
@@ -2626,7 +2644,7 @@ int wolfTPM2_NVWriteAuth(WOLFTPM2_DEV* dev, WOLFTPM2_NV* nv,
     if (dev->ctx.session) {
         wolfTPM2_SetAuthHandle(dev, 0, &nv->handle);
         /* Necessary, because NVWrite has two handles, second is NV Index */
-        wolfTPM2_SetAuthHandle(dev, 1, &nv->handle);
+        wolfTPM2_SetNameHandle(dev, 1, &nv->handle);
     }
 
     while (dataSz > 0) {
