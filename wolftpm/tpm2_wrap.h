@@ -131,6 +131,7 @@ WOLFTPM_API int wolfTPM2_GetTpmDevId(WOLFTPM2_DEV* dev);
 WOLFTPM_API int wolfTPM2_SelfTest(WOLFTPM2_DEV* dev);
 WOLFTPM_API int wolfTPM2_GetCapabilities(WOLFTPM2_DEV* dev, WOLFTPM2_CAPS* caps);
 
+WOLFTPM_API int wolfTPM2_UnsetAuth(WOLFTPM2_DEV* dev, int index);
 WOLFTPM_API int wolfTPM2_SetAuth(WOLFTPM2_DEV* dev, int index,
     TPM_HANDLE sessionHandle, const TPM2B_AUTH* auth, TPMA_SESSION sessionAttributes,
     const TPM2B_NAME* name);

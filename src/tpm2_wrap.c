@@ -374,6 +374,20 @@ int wolfTPM2_GetCapabilities(WOLFTPM2_DEV* dev, WOLFTPM2_CAPS* cap)
     return wolfTPM2_GetCapabilities_NoDev(cap);
 }
 
+int wolfTPM2_UnsetAuth(WOLFTPM2_DEV* dev, int index)
+{
+    TPM2_AUTH_SESSION* session;
+
+    if (dev == NULL || index >= MAX_SESSION_NUM) {
+        return BAD_FUNC_ARG;
+    }
+
+    session = &dev->session[index];
+    XMEMSET(session, 0, sizeof(TPM2_AUTH_SESSION));
+
+    return TPM2_SetSessionAuth(dev->session);
+}
+
 int wolfTPM2_SetAuth(WOLFTPM2_DEV* dev, int index,
     TPM_HANDLE sessionHandle, const TPM2B_AUTH* auth,
     TPMA_SESSION sessionAttributes, const TPM2B_NAME* name)
@@ -2860,6 +2874,9 @@ int wolfTPM2_NVDeleteAuth(WOLFTPM2_DEV* dev, WOLFTPM2_HANDLE* parent,
     /* set session auth for key */
     if (dev->ctx.session) {
         wolfTPM2_SetAuthHandle(dev, 0, parent);
+        /* Make sure no other auth sessions exist */
+        wolfTPM2_UnsetAuth(dev, 1);
+        wolfTPM2_UnsetAuth(dev, 2);
     }
 
     XMEMSET(&in, 0, sizeof(in));
