@@ -40,6 +40,7 @@
 
 #define ARGC_PUB_SIZE  1
 #define ARGC_PRIV_SIZE 2
+#define ARGC_PARAM_ENC 3
 
 /******************************************************************************/
 /* --- BEGIN TPM Keygen Example -- */
@@ -65,28 +66,25 @@ int TPM2_NVRAM_Read_Example(void* userCtx, int argc, char *argv[])
     word32 readSize;
     int paramEncAlg = TPM_ALG_NULL;
 
-    if (argc >= 2) {
-        if (XSTRNCMP(argv[1], "-?", 2) == 0 ||
-            XSTRNCMP(argv[1], "-h", 2) == 0 ||
-            XSTRNCMP(argv[1], "--help", 6) == 0) {
-            usage();
-            return 0;
-        }
-
+    if (argc > 2) {
         XMEMSET(&keyBlob, 0, sizeof(keyBlob));
         keyBlob.pub.size = atoi(argv[ARGC_PUB_SIZE]);
         keyBlob.priv.size = atoi(argv[ARGC_PRIV_SIZE]);
-    }
 
-    while (argc > 3) {
-        if (XSTRNCMP(argv[argc-1], "-aes", 4) == 0) {
-            paramEncAlg = TPM_ALG_CFB;
+        if (argc == 4) {
+            if (XSTRNCMP(argv[ARGC_PARAM_ENC], "-aes", 4) == 0) {
+                paramEncAlg = TPM_ALG_CFB;
+            }
+            if (XSTRNCMP(argv[ARGC_PARAM_ENC], "-xor", 4) == 0) {
+                paramEncAlg = TPM_ALG_XOR;
+            }
+            argc--;
         }
-        if (XSTRNCMP(argv[argc-1], "-xor", 4) == 0) {
-            paramEncAlg = TPM_ALG_XOR;
-        }
-        argc--;
-    };
+    }
+    else {
+        usage();
+        return 0;
+    }
 
     if (keyBlob.priv.size == 0 || keyBlob.pub.size == 0) {
         printf("Specify size of private and public part of the key\n");
