@@ -5785,6 +5785,68 @@ void TPM2_PrintAuth(const TPMS_AUTH_COMMAND* authCmd)
     printf("hmacSize=%u hmacBuffer:\n", authCmd->hmac.size);
     TPM2_PrintBin(authCmd->hmac.buffer, authCmd->hmac.size);
 }
+
+void TPM2_PrintPublicArea(const TPM2B_PUBLIC* pub)
+{
+    printf("publicArea:\n");
+    printf("Total public area size is = %d\n", pub->size);
+    printf("algType = 0x%X\n", pub->publicArea.type);
+    printf("nameAlg = 0x%X\n", pub->publicArea.nameAlg);
+    printf("objectAttributes = 0x%X\n", pub->publicArea.objectAttributes);
+    printf("authPolicy size = %d\n", pub->publicArea.authPolicy.size);
+    /* authPolicy is optional */
+    if (pub->publicArea.authPolicy.size) {
+        TPM2_PrintBin(pub->publicArea.authPolicy.buffer,
+                      pub->publicArea.authPolicy.size);
+    }
+    /* parameters and unique field depend on algType */
+    switch(pub->publicArea.type) {
+        case TPM_ALG_KEYEDHASH:
+            printf("KeyedHash scheme = 0x%X\n", pub->publicArea.parameters.keyedHashDetail.scheme.scheme);
+            printf("KeyedHash details = 0x%X\n", pub->publicArea.parameters.keyedHashDetail.scheme.details.hmac.hashAlg);
+            printf("KeyedHash unique\n");
+            TPM2_PrintBin(pub->publicArea.unique.keyedHash.buffer, pub->publicArea.unique.keyedHash.size);
+            break;
+
+        case TPM_ALG_SYMCIPHER:
+            printf("symDetail algorithm = 0x%X\n", pub->publicArea.parameters.symDetail.sym.algorithm);
+            printf("symDetail keyBitse = 0x%X\n", pub->publicArea.parameters.symDetail.sym.keyBits.sym);
+            printf("symDetail mode = 0x%X\n", pub->publicArea.parameters.symDetail.sym.mode.sym);
+            printf("symDetail unique\n");
+            TPM2_PrintBin(pub->publicArea.unique.sym.buffer, pub->publicArea.unique.sym.size);
+            break;
+
+        case TPM_ALG_RSA:
+            printf("rsaDetail algorithm = 0x%X\n", pub->publicArea.parameters.rsaDetail.symmetric.algorithm);
+            printf("rsaDetail keyBitse = 0x%X\n", pub->publicArea.parameters.rsaDetail.symmetric.keyBits.sym);
+            printf("rsaDetail mode = 0x%X\n", pub->publicArea.parameters.rsaDetail.symmetric.mode.sym);
+            printf("rsaDetail scheme = 0x%X\n", pub->publicArea.parameters.rsaDetail.scheme.scheme);
+            printf("rsaDetail scheme details = 0x%X\n", pub->publicArea.parameters.rsaDetail.scheme.details.anySig.hashAlg);
+            printf("rsaDetail keyBits = 0x%X\n", pub->publicArea.parameters.rsaDetail.keyBits);
+            printf("rsaDetail exponent = 0x%X\n", pub->publicArea.parameters.rsaDetail.exponent);
+
+            printf("RSA Detail unique\n");
+            TPM2_PrintBin(pub->publicArea.unique.rsa.buffer, pub->publicArea.unique.rsa.size);
+            break;
+
+        case TPM_ALG_ECC:
+            /* TODO: ECC parameters */
+            printf("ECC Detail unique X\n");
+            TPM2_PrintBin(pub->publicArea.unique.ecc.x.buffer, pub->publicArea.unique.ecc.x.size);
+            printf("ECC Detail unique Y\n");
+            TPM2_PrintBin(pub->publicArea.unique.ecc.y.buffer, pub->publicArea.unique.ecc.y.size);
+            break;
+
+        default:
+            /* TODO: derive parameters */
+            printf("Derive unique label\n");
+            TPM2_PrintBin(pub->publicArea.unique.derive.label.buffer, pub->publicArea.unique.derive.label.size);
+            printf("Derive unique context\n");
+            TPM2_PrintBin(pub->publicArea.unique.derive.context.buffer, pub->publicArea.unique.derive.context.size);
+            break;
+    }
+
+}
 #endif
 
 /******************************************************************************/
