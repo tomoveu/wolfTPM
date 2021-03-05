@@ -45,9 +45,14 @@ int writeKeyBlob(const char* filename,
 
     fp = XFOPEN(filename, "wb");
     if (fp != XBADFILE) {
-        key->pub.size = sizeof(key->pub);
-        fileSz += XFWRITE(&key->pub, 1, sizeof(key->pub), fp);
-        fileSz += XFWRITE(&key->priv, 1, sizeof(UINT16) + key->priv.size, fp);
+        printf("keyWriteBlob pub.size=%d\n", key->pub.size);
+        if (key->pub.size != 0 && key->pub.size <= sizeof(TPM2B_PUBLIC)) {
+            fileSz += XFWRITE(&key->pub, 1, sizeof(UINT16) + key->pub.size, fp);
+        }
+        printf("keyWriteBlob priv.size=%d\n", key->priv.size);
+        if (key->priv.size != 0 && key->priv.size <= sizeof(TPM2B_PUBLIC)) {
+            fileSz += XFWRITE(&key->priv, 1, sizeof(UINT16) + key->priv.size, fp);
+        }
         XFCLOSE(fp);
     }
     printf("Wrote %d bytes to %s\n", (int)fileSz, filename);
@@ -79,23 +84,34 @@ int readKeyBlob(const char* filename, WOLFTPM2_KEYBLOB* key)
         }
         printf("Reading %d bytes from %s\n", (int)fileSz, filename);
 
-        bytes_read = XFREAD(&key->pub, 1, sizeof(key->pub), fp);
-        if (bytes_read != sizeof(key->pub)) {
-            printf("Read %zu, expected public blob %zu bytes\n", bytes_read, sizeof(key->pub));
+        bytes_read = XFREAD(&key->pub.size, 1, sizeof(key->pub.size), fp);
+        if (bytes_read != sizeof(key->pub.size)) {
+            printf("Error while reading the size of the public part.\n");
             goto exit;
         }
-        if (fileSz > sizeof(key->pub)) {
-            fileSz -= sizeof(key->pub);
+        fileSz -= sizeof(key->pub.size);
+        printf("Public part size is %d\n", key->pub.size);
+        bytes_read = XFREAD(&key->pub.publicArea, 1, key->pub.size, fp);
+        if (bytes_read != key->pub.size) {
+            printf("Read %zu, expected public blob %u bytes\n", bytes_read, key->pub.size);
+            goto exit;
+        }
+        printf("Public part read successfully\n");
+        if (fileSz > key->pub.size) {
+            printf("fileSz=%zu\n", fileSz);
+            fileSz -= key->pub.size;
+            printf("fileSz=%zu\n", fileSz);
             bytes_read = XFREAD(&key->priv, 1, fileSz, fp);
             if (bytes_read != fileSz) {
                 printf("Read %zu, expected private blob %zu bytes\n", bytes_read, fileSz);
                 goto exit;
             }
+            printf("priv.size=%d bytes_read=%zu\n", key->priv.size, bytes_read);
             rc = 0; /* success */
         }
 
         /* sanity check the sizes */
-        if (key->pub.size != sizeof(key->pub) || key->priv.size > sizeof(key->priv.buffer)) {
+        if (key->pub.size > sizeof(key->pub) || key->priv.size > sizeof(key->priv.buffer)) {
             printf("Struct size check failed (pub %d, priv %d)\n",
                    key->pub.size, key->priv.size);
             rc = BUFFER_E;
