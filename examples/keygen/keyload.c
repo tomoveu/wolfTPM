@@ -123,9 +123,6 @@ int TPM2_Keyload_Example(void* userCtx, int argc, char *argv[])
     printf("Loading blob from disk not supported\n");
 #endif
 
-    TPM2_PrintBin(newKey.priv.buffer, newKey.priv.size);
-    TPM2_PrintBin((byte*)&newKey.pub.publicArea, newKey.pub.size);
-
     rc = wolfTPM2_LoadKey(&dev, &newKey, &storage.handle);
     if (rc != TPM_RC_SUCCESS) {
         printf("wolfTPM2_LoadKey failed\n");
