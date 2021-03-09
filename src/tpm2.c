@@ -5804,6 +5804,7 @@ void TPM2_PrintPublicArea(const TPM2B_PUBLIC* pub)
         case TPM_ALG_KEYEDHASH:
             printf("KeyedHash scheme = 0x%2.2X\n", pub->publicArea.parameters.keyedHashDetail.scheme.scheme);
             printf("KeyedHash details = 0x%2.2X\n", pub->publicArea.parameters.keyedHashDetail.scheme.details.hmac.hashAlg);
+
             printf("KeyedHash unique\n");
             TPM2_PrintBin(pub->publicArea.unique.keyedHash.buffer, pub->publicArea.unique.keyedHash.size);
             break;
@@ -5812,6 +5813,7 @@ void TPM2_PrintPublicArea(const TPM2B_PUBLIC* pub)
             printf("symDetail algorithm = 0x%2.2X\n", pub->publicArea.parameters.symDetail.sym.algorithm);
             printf("symDetail keyBits = 0x%2.2X\n", pub->publicArea.parameters.symDetail.sym.keyBits.sym);
             printf("symDetail mode = 0x%2.2X\n", pub->publicArea.parameters.symDetail.sym.mode.sym);
+
             printf("symDetail unique\n");
             TPM2_PrintBin(pub->publicArea.unique.sym.buffer, pub->publicArea.unique.sym.size);
             break;
@@ -5830,7 +5832,15 @@ void TPM2_PrintPublicArea(const TPM2B_PUBLIC* pub)
             break;
 
         case TPM_ALG_ECC:
-            /* TODO: ECC parameters */
+            printf("eccDetail algorithm = 0x%2.2X\n", pub->publicArea.parameters.eccDetail.symmetric.algorithm);
+            printf("eccDetail keyBits = 0x%2.2X\n", pub->publicArea.parameters.eccDetail.symmetric.keyBits.sym);
+            printf("eccDetail mode = 0x%2.2X\n", pub->publicArea.parameters.eccDetail.symmetric.mode.sym);
+            printf("eccDetail scheme = 0x%2.2X\n", pub->publicArea.parameters.eccDetail.scheme.scheme);
+            printf("eccDetail scheme details = 0x%2.2X\n", pub->publicArea.parameters.eccDetail.scheme.details.any.hashAlg);
+            printf("eccDetail curveID = 0x%2.2X\n", pub->publicArea.parameters.eccDetail.curveID);
+            printf("eccDetail KDF scheme = 0x%X\n", pub->publicArea.parameters.eccDetail.kdf.scheme);
+            printf("eccDetail KDF details = 0x%X\n", pub->publicArea.parameters.eccDetail.kdf.details.any.hashAlg);
+
             printf("ECC Detail unique X\n");
             TPM2_PrintBin(pub->publicArea.unique.ecc.x.buffer, pub->publicArea.unique.ecc.x.size);
             printf("ECC Detail unique Y\n");
