@@ -2790,6 +2790,10 @@ typedef enum {
 } TPMI_GPIO_NAME_T;
 typedef UINT32 TPMI_GPIO_NAME;
 
+/* For readability in code */
+#define TPM_GPIO_A TPM_GPIO_PP
+#define TPM_GPIO_B TPM_GPIO_LP
+
 typedef enum {
     TPM_GPIO_STANDARD   = 0x00000000,
     TPM_GPIO_FLOATING   = 0x00000001,
