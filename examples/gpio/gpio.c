@@ -38,9 +38,19 @@
 static void usage(void)
 {
     printf("Expected usage:\n");
-    printf("./examples/gpio/gpio [num]\n");
+    printf("./examples/gpio/gpio [num] [mode]\n");
     printf("* num is a GPIO number between 1-4 (default %d)\n", TPM_GPIO_A+1);
-    printf("Demo usage without parameters, %d.\n", TPM_GPIO_A+1);
+    printf("* mode specifies the GPIO mode, the possible values are:\n");
+    printf("* * output\n");
+    printf("\tpushpull  - output in push pull configuration\n");
+    printf("\topendrain - output in open drain configuration\n");
+    printf("* * input\n");
+    printf("\tfloating - input in floating configuration.\n");
+    printf("\tpullup   - input with pull up enabled\n");
+    printf("\tpulldown - input with pull down enabled\n");
+    printf("* * other\n");
+    printf("\tstandard - reset to the GPIO's default mode\n");
+    printf("Demo usage without parameters, configures GPIO %d as output\n", TPM_GPIO_A+1);
 }
 
 int TPM2_GPIO_Test(void* userCtx, int argc, char *argv[])
@@ -56,6 +66,7 @@ int TPM2_GPIO_Test(void* userCtx, int argc, char *argv[])
             usage();
             goto exit_badargs;
         }
+        gpioNum += TPM_GPIO_A;
     }
     else if (argc == 1) {
         gpioNum = TPM_GPIO_A;
