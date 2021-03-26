@@ -1,4 +1,4 @@
-/* gpio.c
+/* config.c
  *
  * Copyright (C) 2006-2021 wolfSSL Inc.
  *
@@ -32,7 +32,7 @@
 #include <stdlib.h> /* atoi */
 
 /******************************************************************************/
-/* --- BEGIN TPM2.0 GPIO example tool  -- */
+/* --- BEGIN TPM2.0 GPIO Configuration example  -- */
 /******************************************************************************/
 
 static void usage(void)
@@ -53,7 +53,7 @@ static void usage(void)
     printf("Demo usage without parameters, configures GPIO %d as output\n", TPM_GPIO_A+1);
 }
 
-int TPM2_GPIO_Test(void* userCtx, int argc, char *argv[])
+int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
 {
     int gpioNum, rc = -1;
     WOLFTPM2_DEV dev;
@@ -118,7 +118,7 @@ exit_badargs:
 }
 
 /******************************************************************************/
-/* --- END TPM2.0 GPIO example tool -- */
+/* --- END TPM2.0 GPIO Configuration example -- */
 /******************************************************************************/
 #endif /* !WOLFTPM2_NO_WRAPPER */
 
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     int rc = -1;
 
 #ifndef WOLFTPM2_NO_WRAPPER
-    rc = TPM2_GPIO_Test(NULL, argc, argv);
+    rc = TPM2_GPIO_Config_Example(NULL, argc, argv);
 #else
     printf("Wrapper code not compiled in\n");
     (void)argc;

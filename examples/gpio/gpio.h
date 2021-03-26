@@ -19,14 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _CLEAR_H_
-#define _CLEAR_H_
+#ifndef _GPIO_H_
+#define _GPIO_H_
 
 #ifdef __cplusplus
     extern "C" {
 #endif
 
-int TPM2_GPIO_Test(void* userCtx, int argc, char *argv[]);
+int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[]);
+int TPM2_GPIO_Read_Example(void* userCtx, int argc, char *argv[]);
+int TPM2_GPIO_Set_Example(void* userCtx, int argc, char *argv[]);
 
 #ifdef __cplusplus
     }  /* extern "C" */
