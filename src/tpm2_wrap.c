@@ -2769,7 +2769,7 @@ int wolfTPM2_NVReadAuth(WOLFTPM2_DEV* dev, WOLFTPM2_NV* nv,
     if (rc != TPM_RC_SUCCESS) {
         return rc;
     }
-#ifdef
+#endif
 
     /* Necessary, because NVWrite has two handles, second is NV Index */
     rc  = wolfTPM2_SetAuthHandleName(dev, 0, &nv->handle);
