@@ -51,7 +51,7 @@ static void usage(void)
 int TPM2_GPIO_Read_Example(void* userCtx, int argc, char *argv[])
 {
     int rc, pin = 0;
-    word32 readSize, nvAttributes;
+    word32 readSize;
     WOLFTPM2_DEV dev;
     WOLFTPM2_HANDLE parent;
     WOLFTPM2_NV nv;
@@ -81,23 +81,14 @@ int TPM2_GPIO_Read_Example(void* userCtx, int argc, char *argv[])
 
     XMEMSET(&nv, 0, sizeof(nv));
     XMEMSET(&parent, 0, sizeof(parent));
-    /* Prep NV attributes */
+    /* Prep NV Index and its auth */
+    nv.handle.hndl = nvIndex;
+    nv.handle.auth.size = sizeof(gNvAuth)-1;
+    XMEMCPY(nv.handle.auth.buffer, (byte*)gNvAuth, nv.handle.auth.size);
     parent.hndl = TPM_RH_OWNER;
-    rc = wolfTPM2_GetNvAttributesTemplate(parent.hndl, &nvAttributes);
-    if (rc != 0) {
-        printf("Setting NV attributes failed\n");
-        goto exit;
-    }
-    /* Define NV Index for GPIO */
-    readSize = sizeof(pinState);
-    rc = wolfTPM2_NVCreateAuth(&dev, &parent, &nv, nvIndex, nvAttributes,
-                               readSize, (byte*)gNvAuth, sizeof(gNvAuth)-1);
-    if (rc != 0 && rc != TPM_RC_NV_DEFINED) {
-        printf("Creating NV Index for GPIO acccess failed\n");
-        goto exit;
-    }
     /* Read GPIO state */
-    rc = wolfTPM2_NVReadAuth(&dev, &nv, TPM_NV_GPIO_SPACE, &pinState, &readSize, 0);
+    readSize = sizeof(pinState);
+    rc = wolfTPM2_NVReadAuth(&dev, &nv, nvIndex, &pinState, &readSize, 0);
     if (rc != 0) {
             printf("Error while reading GPIO state\n");
             goto exit;
