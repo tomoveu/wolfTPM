@@ -27,6 +27,7 @@
 
 #include <examples/gpio/gpio.h>
 #include <examples/tpm_io.h>
+#include <examples/tpm_test.h>
 
 #include <stdio.h>
 #include <stdlib.h> /* atoi */
@@ -55,10 +56,13 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
     int rc = -1;
     int gpioNum = 0;
     WOLFTPM2_DEV dev;
+    WOLFTPM2_NV nv;
+    WOLFTPM2_HANDLE parent;
     TPMI_GPIO_MODE gpioMode = TPM_GPIO_MODE_STANDARD;
     TPM_HANDLE nvIndex = TPM_NV_GPIO_SPACE;
     GpioConfig_In gpio;
     SetCommandSet_In setCmdSet;
+    word32 nvAttributes;
 
    if (argc >= 2) {
         if (XSTRNCMP(argv[1], "-?", 2) == 0 ||
@@ -103,6 +107,9 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
         goto exit_badargs;
     }
 
+    printf("GPIO num is: %d\n", gpioNum);
+    printf("GPIO mode is: %d\n", gpioMode);
+
     /* Sanity check TPM_GPIO_B can be used only as input */
     if (gpioNum == TPM_GPIO_B &&
         (gpioMode == TPM_GPIO_MODE_PUSHPULL ||
@@ -146,6 +153,25 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
         goto exit;
     }
     printf("TPM2_GPIO_Config success\n");
+
+    /* Configure NV Index for access to this GPIO */
+    XMEMSET(&nv, 0, sizeof(nv));
+    XMEMSET(&parent, 0, sizeof(parent));
+    /* Prep NV attributes */
+    parent.hndl = TPM_RH_OWNER;
+    rc = wolfTPM2_GetNvAttributesTemplate(parent.hndl, &nvAttributes);
+    if (rc != 0) {
+        printf("Setting NV attributes failed\n");
+        goto exit;
+    }
+    /* Define NV Index for GPIO */
+    rc = wolfTPM2_NVCreateAuth(&dev, &parent, &nv, nvIndex, nvAttributes,
+                               sizeof(BYTE), (byte*)gNvAuth, sizeof(gNvAuth)-1);
+    if (rc != 0 && rc != TPM_RC_NV_DEFINED) {
+        printf("Creating NV Index for GPIO acccess failed\n");
+        goto exit;
+    }
+    printf("NV Index for GPIO access created\n");
 
 exit:
 
