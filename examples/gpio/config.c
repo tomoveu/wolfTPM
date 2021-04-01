@@ -192,13 +192,13 @@ int main(int argc, char *argv[])
 {
     int rc = -1;
 
-#if defined(WOLFTPM_ST33) || defined(WOLFTPM_AUTODETECT)
+#if defined(WOLFTPM_ST33)
     rc = TPM2_GPIO_Config_Example(NULL, argc, argv);
 #else
     printf("Extra GPIO is supported only on ST33 TPM 2.0 modules.\n");
     (void)argc;
     (void)argv;
-#endif /* !WOLFTPM2_NO_WRAPPER */
+#endif /* !WOLFTPM_ST33 */
 
     return rc;
 }
