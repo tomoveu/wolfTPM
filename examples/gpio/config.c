@@ -56,6 +56,7 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
     int rc = -1;
     int gpioNum = 0;
     WOLFTPM2_DEV dev;
+    WOLFTPM2_CAPS caps;
     WOLFTPM2_NV nv;
     WOLFTPM2_HANDLE parent;
     TPMI_GPIO_MODE gpioMode = TPM_GPIO_MODE_STANDARD;
@@ -127,7 +128,18 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
     }
     printf("wolfTPM2_Init: success\n");
 
+    /* Get TPM capabilities, to discover the TPM vendor */
+    rc = wolfTPM2_GetCapabilities(&dev, &caps);
+    if (rc != TPM_RC_SUCCESS) {
+        printf("wolfTPM2_GetCapabilities failed 0x%x: %s\n", rc, TPM2_GetRCString(rc));
+    }
+
     /* Enable TPM2_GPIO_Config command */
+    if (caps.mfg != TPM_MFG_STM) {
+        printf("Extra GPIO is supported only on ST33 TPM 2.0 modules\n");
+        goto exit;
+    }
+
     XMEMSET(&setCmdSet, 0, sizeof(setCmdSet));
     setCmdSet.authHandle = TPM_RH_PLATFORM;
     setCmdSet.commandCode = TPM_CC_GPIO_Config;
