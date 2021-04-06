@@ -23,7 +23,7 @@
 
 #include <wolftpm/tpm2_wrap.h>
 
-#ifndef WOLFTPM2_NO_WRAPPER
+#if defined(WOLFTPM_ST33) || defined(WOLFTPM_AUTODETECT)
 
 #include <examples/gpio/gpio.h>
 #include <examples/tpm_io.h>
@@ -197,20 +197,20 @@ exit_badargs:
 /******************************************************************************/
 /* --- END TPM2.0 GPIO Configuration example -- */
 /******************************************************************************/
-#endif /* !WOLFTPM2_NO_WRAPPER */
+#endif /* WOLFTPM_ST33 || WOLFTPM_AUTODETECT */
 
 #ifndef NO_MAIN_DRIVER
 int main(int argc, char *argv[])
 {
     int rc = -1;
 
-#if defined(WOLFTPM_ST33)
+#if defined(WOLFTPM_ST33) || defined(WOLFTPM_AUTODETECT)
     rc = TPM2_GPIO_Config_Example(NULL, argc, argv);
 #else
     printf("Extra GPIO is supported only on ST33 TPM 2.0 modules.\n");
     (void)argc;
     (void)argv;
-#endif /* !WOLFTPM_ST33 */
+#endif /* WOLFTPM_ST33 || WOLFTPM_AUTODETECT */
 
     return rc;
 }

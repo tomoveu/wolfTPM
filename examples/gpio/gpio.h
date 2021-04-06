@@ -1,4 +1,4 @@
-/* GPIO.h
+/* gpio.h
  *
  * Copyright (C) 2006-2021 wolfSSL Inc.
  *
