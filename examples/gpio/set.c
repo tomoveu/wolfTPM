@@ -43,7 +43,7 @@ static void usage(void)
 {
     printf("Expected usage:\n");
     printf("./examples/gpio/set [num] [-high/-low]\n");
-    printf("* num is a GPIO number (between 0-3)\n");
+    printf("* num is a GPIO number between %d-%d (default %d)\n", GPIO_NUM_MIN, GPIO_NUM_MAX, TPM_GPIO_A);
     printf("Default usage, without parameters, set GPIO%d high\n", TPM_GPIO_A);
 }
 
@@ -65,7 +65,7 @@ int TPM2_GPIO_Set_Example(void* userCtx, int argc, char *argv[])
             return 0;
         }
         pin = atoi(argv[1]);
-        if(pin < 0 || pin > 3) {
+        if(pin < GPIO_NUM_MIN || pin > GPIO_NUM_MAX) {
             usage();
             return 0;
         }

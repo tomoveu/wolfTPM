@@ -44,7 +44,7 @@ static void usage(void)
 {
     printf("Expected usage:\n");
     printf("./examples/gpio/read [num]\n");
-    printf("num is a GPIO (between 0-3)\n");
+    printf("* num is a GPIO number between %d-%d (default %d)\n", GPIO_NUM_MIN, GPIO_NUM_MAX, TPM_GPIO_A);
     printf("Default usage, without parameters, read GPIO%d\n", TPM_GPIO_A);
 }
 
@@ -66,7 +66,7 @@ int TPM2_GPIO_Read_Example(void* userCtx, int argc, char *argv[])
             return 0;
         }
         pin = atoi(argv[1]);
-        if(pin < 0 || pin > 3) {
+        if(pin < GPIO_NUM_MIN || pin > GPIO_NUM_MAX) {
             usage();
             return 0;
         }
@@ -90,8 +90,8 @@ int TPM2_GPIO_Read_Example(void* userCtx, int argc, char *argv[])
     readSize = sizeof(pinState);
     rc = wolfTPM2_NVReadAuth(&dev, &nv, nvIndex, &pinState, &readSize, 0);
     if (rc != 0) {
-            printf("Error while reading GPIO state\n");
-            goto exit;
+        printf("Error while reading GPIO state\n");
+        goto exit;
     }
 
     if (pinState == 0x01) {

@@ -36,11 +36,14 @@
 /* --- BEGIN TPM2.0 GPIO Configuration example  -- */
 /******************************************************************************/
 
+#define GPIO_MODE_MAX 6
+#define GPIO_MODE_UNCONFIG GPIO_MODE_MAX
+
 static void usage(void)
 {
     printf("Expected usage:\n");
     printf("./examples/gpio/gpio [num] [mode]\n");
-    printf("* num is a GPIO number between 0-3 (default %d)\n", TPM_GPIO_A);
+    printf("* num is a GPIO number between %d-%d (default %d)\n", GPIO_NUM_MIN, GPIO_NUM_MAX, TPM_GPIO_A);
     printf("* mode is a number selecting the GPIO mode between 0-5 (default %d):\n", TPM_GPIO_MODE_STANDARD);
     printf("\t0. standard - reset to the GPIO's default mode\n");
     printf("\t1. floating - input in floating configuration.\n");
@@ -48,6 +51,7 @@ static void usage(void)
     printf("\t3. pulldown - input with pull down enabled\n");
     printf("\t4. opendrain - output in open drain configuration\n");
     printf("\t5. pushpull  - output in push pull configuration\n");
+    printf("\t6. unconfigure - delete the NV index for the selected GPIO\n");
     printf("Demo usage, without parameters, configures GPIO%d as pushpull output.\n", TPM_GPIO_A);
 }
 
@@ -76,8 +80,8 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
         }
         if (argc == 3) {
             gpioMode = atoi(argv[2]);
-            if (gpioMode > 5) {
-                printf("GPIO mode is out of range (0-5)\n");
+            if (gpioMode > GPIO_MODE_MAX) {
+                printf("GPIO mode is out of range (0-6)\n");
                 usage();
                 goto exit_badargs;
             }
@@ -91,8 +95,8 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
         }
         if (argc == 2) {
             gpioNum = atoi(argv[1]);
-            if (gpioNum < 0 || gpioNum > 3) {
-                printf("GPIO is out of range (0-3)\n");
+            if (gpioNum < GPIO_NUM_MIN || gpioNum > GPIO_NUM_MAX) {
+                printf("GPIO is out of range (%d-%d)\n", GPIO_NUM_MIN, GPIO_NUM_MAX);
                 usage();
                 goto exit_badargs;
             }
@@ -153,15 +157,20 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
      * This way we make sure a new GPIO config can be set
      */
     rc = wolfTPM2_NVDelete(&dev, TPM_RH_OWNER, nvIndex);
-#ifdef DEBUG_WOLFTPM
     if (rc == TPM_RC_SUCCESS) {
         printf("NV index undefined\n");
+    }
+    else if (rc == (TPM_RC_HANDLE | TPM_RC_2)) {
+        printf("NV Index is available for GPIO use\n");
     }
     else {
         printf("wolfTPM2_NVDelete failed 0x%x: %s\n", rc, TPM2_GetRCString(rc));
     }
-#endif
 
+    /* GPIO unconfiguration is done using NVDelete, no further action needed */
+    if (gpioMode == GPIO_MODE_UNCONFIG) {
+        goto exit;
+    }
 
     XMEMSET(&setCmdSet, 0, sizeof(setCmdSet));
     setCmdSet.authHandle = TPM_RH_PLATFORM;
@@ -173,7 +182,10 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
         goto exit;
     }
 
-    /* Configuring GPIO */
+    /* Configuring a TPM GPIO requires a PLATFORM authorization. Afterwards,
+     * using that GPIO is up to the user. Therefore, NV Indexes are operated
+     * using OWNER authorization. See below NVCreateAuth.
+     */
     XMEMSET(&gpio, 0, sizeof(gpio));
     gpio.authHandle = TPM_RH_PLATFORM;
     gpio.config.count = 1;
@@ -202,7 +214,7 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
     /* Define NV Index for GPIO */
     rc = wolfTPM2_NVCreateAuth(&dev, &parent, &nv, nvIndex, nvAttributes,
                                sizeof(BYTE), (byte*)gNvAuth, sizeof(gNvAuth)-1);
-    if (rc != 0 && rc != TPM_RC_NV_DEFINED) {
+    if (rc != 0) {
         printf("Creating NV Index for GPIO acccess failed\n");
         goto exit;
     }
