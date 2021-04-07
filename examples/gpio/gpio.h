@@ -29,7 +29,6 @@
 int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[]);
 int TPM2_GPIO_Read_Example(void* userCtx, int argc, char *argv[]);
 int TPM2_GPIO_Set_Example(void* userCtx, int argc, char *argv[]);
-int TPM2_GPIO_Unconfig_Example(void* userCtx, int argc, char *argv[]);
 
 #ifdef __cplusplus
     }  /* extern "C" */
