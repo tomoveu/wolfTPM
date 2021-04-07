@@ -146,6 +146,23 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
         goto exit;
     }
 
+#ifdef DEBUG_WOLFTPM
+    printf("Trying to remove NV index 0x%8.8X used for GPIO\n", nvIndex);
+#endif
+    /* Make sure NV Index for this GPIO is cleared before use
+     * This way we make sure a new GPIO config can be set
+     */
+    rc = wolfTPM2_NVDelete(&dev, TPM_RH_OWNER, nvIndex);
+#ifdef DEBUG_WOLFTPM
+    if (rc == TPM_RC_SUCCESS) {
+        printf("NV index undefined\n");
+    }
+    else {
+        printf("wolfTPM2_NVDelete failed 0x%x: %s\n", rc, TPM2_GetRCString(rc));
+    }
+#endif
+
+
     XMEMSET(&setCmdSet, 0, sizeof(setCmdSet));
     setCmdSet.authHandle = TPM_RH_PLATFORM;
     setCmdSet.commandCode = TPM_CC_GPIO_Config;
