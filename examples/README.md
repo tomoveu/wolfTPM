@@ -383,7 +383,7 @@ Some TPM 2.0 modules have extra I/O functionalities and additional GPIO that the
 
 Currently, the GPIO control examples support only ST33 TPM 2.0 modules.
 
-There are four examples available: `gpio/config`, `gpio/set`, `gpio/read` and `gpio/unconfig`.
+There are three examples available: `gpio/config`, `gpio/set`, `gpio/read`.
 
 Every example has a help option `-h`. Please consult with `config -h` about the various GPIO modes.
 
@@ -425,18 +425,9 @@ GPIO0 set to high level
 
 ```
 
-Before switching a GPIO configuration it is necesssary to destroy existing one (and clear NV Index):
+Switching a GPIO configuration is seamless, because gpio/config takes care of deleting existing NV Index, so a new GPIO configuration can be chosen.
 
-```
-
-./examples/gpio/unconfig
-wolfTPM2_Init: success
-Trying to remove NV index 0x01C40000 used for GPIO
-NV indexundefined
-
-```
-
-Example usage for configuring a GPIO as input can be found below:
+Example usage for configuring a GPIO as input with a pulp-up can be found below:
 
 ```
 
