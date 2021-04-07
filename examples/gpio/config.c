@@ -64,6 +64,8 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
     GpioConfig_In gpio;
     SetCommandSet_In setCmdSet;
     word32 nvAttributes;
+    int gpioInput = 0;
+    BYTE dummy = 0;
 
    if (argc >= 2) {
         if (XSTRNCMP(argv[1], "-?", 2) == 0 ||
@@ -78,6 +80,10 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
                 printf("GPIO mode is out of range (0-5)\n");
                 usage();
                 goto exit_badargs;
+            }
+            /* Check if mode is for GPIO Input to perform extra config step */
+            if (gpioMode > 0 && gpioMode < 4) {
+                gpioInput = 1;
             }
             gpioMode += TPM_GPIO_MODE_STANDARD;
             /* Preparing to process next argument */
@@ -184,6 +190,14 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
         goto exit;
     }
     printf("NV Index for GPIO access created\n");
+
+    /* GPIO configured as an input, requires an extra configuration step */
+    if (gpioInput) {
+        rc = wolfTPM2_NVWriteAuth(&dev, &nv, nvIndex, &dummy, sizeof(dummy), 0);
+        if (rc != 0) {
+            printf("Error while configuring the GPIO as an Input.\n");
+        }
+    }
 
 exit:
 
