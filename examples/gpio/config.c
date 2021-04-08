@@ -44,7 +44,7 @@ static void usage(void)
     printf("Expected usage:\n");
     printf("./examples/gpio/gpio [num] [mode]\n");
     printf("* num is a GPIO number between %d-%d (default %d)\n", GPIO_NUM_MIN, GPIO_NUM_MAX, TPM_GPIO_A);
-    printf("* mode is a number selecting the GPIO mode between 0-5 (default %d):\n", TPM_GPIO_MODE_STANDARD);
+    printf("* mode is a number selecting the GPIO mode between 0-%d (default %d):\n", GPIO_MODE_MAX, TPM_GPIO_MODE_STANDARD);
     printf("\t0. standard - reset to the GPIO's default mode\n");
     printf("\t1. floating - input in floating configuration.\n");
     printf("\t2. pullup   - input with pull up enabled\n");
@@ -52,7 +52,7 @@ static void usage(void)
     printf("\t4. opendrain - output in open drain configuration\n");
     printf("\t5. pushpull  - output in push pull configuration\n");
     printf("\t6. unconfigure - delete the NV index for the selected GPIO\n");
-    printf("Demo usage, without parameters, configures GPIO%d as pushpull output.\n", TPM_GPIO_A);
+    printf("Example usage, without parameters, configures GPIO%d as pushpull output.\n", TPM_GPIO_A);
 }
 
 int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
@@ -130,7 +130,7 @@ int TPM2_GPIO_Config_Example(void* userCtx, int argc, char *argv[])
         return 0;
     }
 
-    printf("Demo how to use extra GPIO on a TPM 2.0 modules\n");
+    printf("Example how to use extra GPIO on a TPM 2.0 modules\n");
     rc = wolfTPM2_Init(&dev, TPM2_IoCb, userCtx);
     if (rc != TPM_RC_SUCCESS) {
         printf("wolfTPM2_Init failed 0x%x: %s\n", rc, TPM2_GetRCString(rc));

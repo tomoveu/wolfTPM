@@ -396,14 +396,15 @@ examples/gpio/config -h
 Expected usage:
 ./examples/gpio/gpio [num] [mode]
 * num is a GPIO number between 0-3 (default 0)
-* mode is a number selecting the GPIO mode between 0-5 (default 0):
+* mode is a number selecting the GPIO mode between 0-6 (default 0):
 	0. standard - reset to the GPIO's default mode
 	1. floating - input in floating configuration.
 	2. pullup   - input with pull up enabled
 	3. pulldown - input with pull down enabled
 	4. opendrain - output in open drain configuration
 	5. pushpull  - output in push pull configuration
-Demo usage, without parameters, configures GPIO0 as pushpull output.
+	6. unconfigure - delete the NV index for the selected GPIO
+Example usage, without parameters, configures GPIO0 as pushpull output.
 
 ```
 
@@ -414,7 +415,7 @@ Example usage for configuring a GPIO to output can be found below:
 $ ./examples/gpio/config
 GPIO num is: 0
 GPIO mode is: 5
-Demo how to use extra GPIO on a TPM 2.0 modules
+Example how to use extra GPIO on a TPM 2.0 modules
 wolfTPM2_Init: success
 Trying to configure GPIO0...
 TPM2_GPIO_Config success
