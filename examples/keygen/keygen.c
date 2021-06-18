@@ -47,6 +47,7 @@ static void usage(void)
 {
     printf("Expected usage:\n");
     printf("./examples/keygen/keygen [keyblob.bin] [-ecc/-rsa/-sym] [-t] [-aes/xor]\n");
+    printf("* -eh: Create keys under the Endorsement Hierarchy(EK)\n");
     printf("* -rsa: Use RSA for asymmetric key generation (DEFAULT)\n");
     printf("* -ecc: Use ECC for asymmetric key generation \n");
     printf("* -sym: Use Symmetric Cypher for key generation\n");
@@ -108,7 +109,9 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
 {
     int rc;
     WOLFTPM2_DEV dev;
+    WOLFTPM2_KEY endorse; /* EK */
     WOLFTPM2_KEY storage; /* SRK */
+    WOLFTPM2_KEY *primary = &storage; /* Default option, see "-eh" in usage() */
     WOLFTPM2_KEY aesKey; /* Symmetric key */
     WOLFTPM2_KEYBLOB newKey;
     TPMT_PUBLIC publicTemplate;
@@ -117,6 +120,7 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
     TPM_ALG_ID paramEncAlg = TPM_ALG_NULL;
     WOLFTPM2_SESSION tpmSession;
     TPM2B_AUTH auth;
+    int endorseKey = 0;
     int bAIK = 1;
     int keyBits = 256;
     const char* outputFile = "keyblob.bin";
@@ -160,6 +164,9 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
         if (XSTRNCMP(argv[argc-1], "-t", 2) == 0) {
             bAIK = 0;
         }
+        if (XSTRNCMP(argv[argc-1], "-eh", 3) == 0) {
+            endorseKey = 1;
+        }
         if (XSTRNCMP(argv[argc-1], "-aes", 4) == 0) {
             paramEncAlg = TPM_ALG_CFB;
         }
@@ -169,6 +176,7 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
         argc--;
     }
 
+    XMEMSET(&endorse, 0, sizeof(endorse));
     XMEMSET(&storage, 0, sizeof(storage));
     XMEMSET(&newKey, 0, sizeof(newKey));
     XMEMSET(&aesKey, 0, sizeof(aesKey));
@@ -190,19 +198,26 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
         goto exit;
     }
 
-    /* get SRK */
-    rc = getPrimaryStoragekey(&dev, &storage, TPM_ALG_RSA);
+    if(endorseKey) {
+        rc = wolfTPM2_CreateEK(&dev, &endorse, TPM_ALG_RSA);
+        primary = &endorse;
+    }
+    else {
+        /* get SRK */
+        rc = getPrimaryStoragekey(&dev, &storage, TPM_ALG_RSA);
+        primary = &storage;
+    }
     if (rc != 0) goto exit;
 
     if (paramEncAlg != TPM_ALG_NULL) {
         /* Start an authenticated session (salted / unbound) with parameter encryption */
-        rc = wolfTPM2_StartSession(&dev, &tpmSession, &storage, NULL,
+        rc = wolfTPM2_StartSession(&dev, &tpmSession, primary, NULL,
             TPM_SE_HMAC, paramEncAlg);
         if (rc != 0) goto exit;
         printf("TPM2_StartAuthSession: sessionHandle 0x%x\n",
             (word32)tpmSession.handle.hndl);
 
-        /* set session for authorization of the storage key */
+        /* set session for authorization of the primary key */
         rc = wolfTPM2_SetAuthSession(&dev, 1, &tpmSession,
             (TPMA_SESSION_decrypt | TPMA_SESSION_encrypt | TPMA_SESSION_continueSession));
         if (rc != 0) goto exit;
@@ -261,7 +276,7 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
     if (rc != 0) goto exit;
 
     printf("Creating new %s key...\n", TPM2_GetAlgName(alg));
-    rc = wolfTPM2_CreateKey(&dev, &newKey, &storage.handle,
+    rc = wolfTPM2_CreateKey(&dev, &newKey, &primary->handle,
                             &publicTemplate, auth.buffer, auth.size);
     if (rc != TPM_RC_SUCCESS) {
         printf("wolfTPM2_CreateKey failed\n");
@@ -290,7 +305,7 @@ exit:
     }
 
     /* Close handles */
-    wolfTPM2_UnloadHandle(&dev, &storage.handle);
+    wolfTPM2_UnloadHandle(&dev, &primary->handle);
     wolfTPM2_UnloadHandle(&dev, &newKey.handle);
     wolfTPM2_UnloadHandle(&dev, &tpmSession.handle);
 
