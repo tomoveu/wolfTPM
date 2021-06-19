@@ -862,7 +862,6 @@ int wolfTPM2_ChangeAuthKey(WOLFTPM2_DEV* dev, WOLFTPM2_KEY* key,
     if (dev == NULL || key == NULL || parent == NULL)
         return BAD_FUNC_ARG;
 
-    /* set session auth for key */
     wolfTPM2_SetAuthHandle(dev, 0, &key->handle);
 
     XMEMSET(&changeIn, 0, sizeof(changeIn));
@@ -917,7 +916,7 @@ int wolfTPM2_CreateKey(WOLFTPM2_DEV* dev, WOLFTPM2_KEYBLOB* keyBlob,
     WOLFTPM2_HANDLE* parent, TPMT_PUBLIC* publicTemplate,
     const byte* auth, int authSz)
 {
-    int rc;
+    int rc, authCount = 0;
     Create_In  createIn;
     Create_Out createOut;
 
@@ -928,8 +927,12 @@ int wolfTPM2_CreateKey(WOLFTPM2_DEV* dev, WOLFTPM2_KEYBLOB* keyBlob,
     XMEMSET(keyBlob, 0, sizeof(WOLFTPM2_KEYBLOB));
     XMEMSET(&createOut, 0, sizeof(createOut)); /* make sure pub struct is zero init */
 
-    /* set session auth for parent key */
-    wolfTPM2_SetAuthHandle(dev, 0, parent);
+    if (!parent->policyAuth) {
+        /* Set password auth after any pre-existing sessions, e.g. Policy */
+        authCount = TPM2_GetSessionAuthCount(&dev->ctx);
+        /* set session auth for parent key */
+        wolfTPM2_SetAuthHandle(dev, authCount-1, parent);
+    }
 
     XMEMSET(&createIn, 0, sizeof(createIn));
     createIn.parentHandle = parent->hndl;
@@ -972,7 +975,7 @@ int wolfTPM2_CreateKey(WOLFTPM2_DEV* dev, WOLFTPM2_KEYBLOB* keyBlob,
 int wolfTPM2_LoadKey(WOLFTPM2_DEV* dev, WOLFTPM2_KEYBLOB* keyBlob,
     WOLFTPM2_HANDLE* parent)
 {
-    int rc;
+    int rc, authCount = 0;
     Load_In loadIn;
     Load_Out loadOut;
 
@@ -980,8 +983,10 @@ int wolfTPM2_LoadKey(WOLFTPM2_DEV* dev, WOLFTPM2_KEYBLOB* keyBlob,
         return BAD_FUNC_ARG;
 
     /* set session auth for parent key */
-    if (dev->ctx.session) {
-        wolfTPM2_SetAuthHandle(dev, 0, parent);
+    if (dev->ctx.session && !parent->policyAuth) {
+        authCount = TPM2_GetSessionAuthCount(&dev->ctx);
+        /* Set Password auth after any pre-existing sessions, e.g. Policy */
+        wolfTPM2_SetAuthHandle(dev, authCount-1, parent);
     }
 
     /* Load new key */

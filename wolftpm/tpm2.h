@@ -3064,6 +3064,35 @@ WOLFTPM_API int    TPM2_GetSessionAuthCount(TPM2_CTX* ctx);
 
 /*!
     \ingroup TPM2_Proprietary
+    \brief Check if a TPM session is of HMAC type
+
+    \return positive number if the session is of Policy type
+    \return otherwise 0
+
+    \param sessionHandle integer value specifying a valid TPM Handle
+
+    \sa TPM2_IsHmacSession
+    \sa TPM2_GetSessionAuthCount
+*/
+WOLFTPM_API int TPM2_isPolicySession(int sessionHandle);
+
+/*!
+    \ingroup TPM2_Proprietary
+    \brief Check if a TPM session is of Policy type
+
+    \return positive number if the session is of HMAC type
+    \return otherwise 0
+
+    \param sessionHandle integer value specifying a valid TPM Handle
+
+    \sa TPM2_IsPolicySession
+    \sa TPM2_GetSessionAuthCount
+*/
+WOLFTPM_API int TPM2_isHmacSession(int sessionHandle);
+
+
+/*!
+    \ingroup TPM2_Proprietary
     \brief Sets a new TPM2 context for use
 
     \param ctx pointer to a TPM2_CTX struct

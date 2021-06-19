@@ -126,6 +126,9 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
     const char* outputFile = "keyblob.bin";
     size_t len = 0;
     char symMode[] = "aesctr";
+    PolicySecret_In policySecret;
+    PolicySecret_Out policySecret_out;
+
 
     if (argc >= 2) {
         if (XSTRNCMP(argv[1], "-?", 2) == 0 ||
@@ -200,6 +203,7 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
 
     if(endorseKey) {
         rc = wolfTPM2_CreateEK(&dev, &endorse, TPM_ALG_RSA);
+        endorse.handle.policyAuth = 1; /* EK requires Policy auth, not Password */
         primary = &endorse;
     }
     else {
@@ -221,6 +225,27 @@ int TPM2_Keygen_Example(void* userCtx, int argc, char *argv[])
         rc = wolfTPM2_SetAuthSession(&dev, 1, &tpmSession,
             (TPMA_SESSION_decrypt | TPMA_SESSION_encrypt | TPMA_SESSION_continueSession));
         if (rc != 0) goto exit;
+    }
+
+    if (endorseKey) {
+        /* Endorsement Key requires authorization with Policy */
+        rc = wolfTPM2_StartSession(&dev, &tpmSession, NULL, NULL,
+            TPM_SE_POLICY, paramEncAlg);
+        if (rc != 0) goto exit;
+        printf("TPM2_StartAuthSession: sessionHandle 0x%x\n",
+            (word32)tpmSession.handle.hndl);
+        /* Provide Endorsement Auth using PolicySecret */
+        XMEMSET(&policySecret, 0, sizeof(policySecret));
+        policySecret.authHandle = TPM_RH_ENDORSEMENT;
+        policySecret.policySession = tpmSession.handle.hndl;
+        rc = TPM2_PolicySecret(&policySecret, &policySecret_out);
+        if (rc != TPM_RC_SUCCESS) {
+            printf("policySecret failed 0x%x: %s\n", rc, TPM2_GetRCString(rc));
+            goto exit;
+        }
+        printf("TPM2_policySecret success\n");
+        /* Set the created Policy Session for use in next operation */
+        wolfTPM2_SetAuthSession(&dev, 0, &tpmSession, 0);
     }
 
     /* Create new key */

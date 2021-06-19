@@ -31,9 +31,10 @@
 
 typedef struct WOLFTPM2_HANDLE {
     TPM_HANDLE      hndl;
-    TPM2B_AUTH      auth;
+    TPM2B_AUTH      auth;       /* Used if policyAuth is not set */
     TPMT_SYM_DEF    symmetric;
     TPM2B_NAME      name;
+    int             policyAuth; /* Handle requires Policy, not password Auth */
 } WOLFTPM2_HANDLE;
 
 #define TPM_SES_PWD 0xFF /* Session type for Password that fits in one byte */
