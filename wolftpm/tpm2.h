@@ -1618,7 +1618,10 @@ typedef struct TPM2_AUTH_SESSION {
     TPM2B_NAME name;
 } TPM2_AUTH_SESSION;
 
-
+/* Macros to determine TPM 2.0 Session type */
+#define TPM2_IS_PWD_SESSION(sessionHandle) ((sessionHandle) == TPM_RS_PW)
+#define TPM2_IS_HMAC_SESSION(sessionHandle) ((sessionHandle & 0xFF000000) == HMAC_SESSION_FIRST)
+#define TPM2_IS_POLICY_SESSION(sessionHandle) ((sessionHandle & 0xFF000000) == POLICY_SESSION_FIRST)
 
 /* Predetermined TPM 2.0 Indexes */
 #define TPM_20_TPM_MFG_NV_SPACE        ((TPM_HT_NV_INDEX << 24) | (0x00 << 22))
@@ -3061,35 +3064,6 @@ WOLFTPM_API TPM_RC TPM2_SetSessionAuth(TPM2_AUTH_SESSION *session);
     \sa TPM2_AUTH_SESSION
 */
 WOLFTPM_API int    TPM2_GetSessionAuthCount(TPM2_CTX* ctx);
-
-/*!
-    \ingroup TPM2_Proprietary
-    \brief Check if a TPM session is of HMAC type
-
-    \return positive number if the session is of Policy type
-    \return otherwise 0
-
-    \param sessionHandle integer value specifying a valid TPM Handle
-
-    \sa TPM2_IsHmacSession
-    \sa TPM2_GetSessionAuthCount
-*/
-WOLFTPM_API int TPM2_isPolicySession(int sessionHandle);
-
-/*!
-    \ingroup TPM2_Proprietary
-    \brief Check if a TPM session is of Policy type
-
-    \return positive number if the session is of HMAC type
-    \return otherwise 0
-
-    \param sessionHandle integer value specifying a valid TPM Handle
-
-    \sa TPM2_IsPolicySession
-    \sa TPM2_GetSessionAuthCount
-*/
-WOLFTPM_API int TPM2_isHmacSession(int sessionHandle);
-
 
 /*!
     \ingroup TPM2_Proprietary

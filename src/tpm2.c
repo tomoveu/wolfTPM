@@ -167,7 +167,8 @@ static int TPM2_CommandProcess(TPM2_CTX* ctx, TPM2_Packet* packet,
         /* Note: Copy between TPM2_AUTH_SESSION and TPMS_AUTH_COMMAND is allowed */
         XMEMCPY(&authCmd, session, sizeof(TPMS_AUTH_COMMAND));
 
-        if (session->sessionHandle != TPM_RS_PW && !TPM2_isPolicySession(session->sessionHandle)) {
+        /* Skip Policy session, because Enhanced Authorization is not yet implemented */
+        if (TPM2_IS_HMAC_SESSION(session->sessionHandle)) {
         #ifndef WOLFTPM2_NO_WOLFCRYPT
             TPM2B_NAME name1, name2, name3;
             TPM2B_DIGEST hash;
@@ -524,26 +525,6 @@ int TPM2_GetSessionAuthCount(TPM2_CTX* ctx)
     }
 
     return sessionCount;
-}
-
-int TPM2_isPolicySession(int sessionHandle)
-{
-    sessionHandle &= 0xFF000000;
-    /* Check MSO for Policy session */
-    if (sessionHandle & 0x03000000) {
-        return 1;
-    }
-    return 0;
-}
-
-int TPM2_isHmacSession(int sessionHandle)
-{
-    sessionHandle &= 0xFF000000;
-    /* Check MSO for HMAC session */
-    if (sessionHandle & 0x02000000) {
-        return 1;
-    }
-    return 0;
 }
 
 TPM_RC TPM2_ChipStartup(TPM2_CTX* ctx, int timeoutTries)
@@ -1090,6 +1071,51 @@ TPM_RC TPM2_Create(Create_In* in, Create_Out* out)
             TPM2_Packet_ParseBytes(&packet,
                         out->creationTicket.digest.buffer,
                         out->creationTicket.digest.size);
+        }
+
+        TPM2_ReleaseLock(ctx);
+    }
+    return rc;
+}
+
+TPM_RC TPM2_CreateLoaded(CreateLoaded_In* in, CreateLoaded_Out* out)
+{
+    TPM_RC rc;
+    TPM2_CTX* ctx = TPM2_GetActiveCtx();
+
+    if (ctx == NULL || in == NULL || out == NULL || ctx->session == NULL)
+        return BAD_FUNC_ARG;
+
+    rc = TPM2_AcquireLock(ctx);
+    if (rc == TPM_RC_SUCCESS) {
+        CmdInfo_t info = {
+            .inHandleCnt = 1,
+            .flags = (CMD_FLAG_ENC2 | CMD_FLAG_DEC2),
+        };
+        TPM2_Packet packet;
+        TPM2_Packet_Init(ctx, &packet);
+        TPM2_Packet_AppendU32(&packet, in->parentHandle);
+        info.authCnt = TPM2_Packet_AppendAuth(&packet, ctx);
+        TPM2_Packet_AppendSensitiveCreate(&packet, &in->inSensitive);
+        TPM2_Packet_AppendPublic(&packet, &in->inPublic);
+        TPM2_Packet_Finalize(&packet, TPM_ST_SESSIONS, TPM_CC_CreateLoaded);
+
+        /* send command */
+        rc = TPM2_SendCommandAuth(ctx, &packet, &info);
+        if (rc == TPM_RC_SUCCESS) {
+            UINT32 paramSz = 0;
+
+            TPM2_Packet_ParseU32(&packet, &out->objectHandle);
+            TPM2_Packet_ParseU32(&packet, &paramSz);
+
+            TPM2_Packet_ParseU16(&packet, &out->outPrivate.size);
+            TPM2_Packet_ParseBytes(&packet, out->outPrivate.buffer,
+                out->outPrivate.size);
+
+            TPM2_Packet_ParsePublic(&packet, &out->outPublic);
+
+            TPM2_Packet_ParseU16(&packet, &out->name.size);
+            TPM2_Packet_ParseBytes(&packet, out->name.name, out->name.size);
         }
 
         TPM2_ReleaseLock(ctx);
